@@ -1,4 +1,6 @@
 # Discrete Point Flow Networks 
+Roman Klokov, Edmond Boyer, Jakob Verbeek
+
 This repository will contain the code for the **"Discrete Point Flow Networks for Efficient Point Cloud Generation"** [paper](https://arxiv.org/abs/2007.10170) accepted to 16th European Conference on Computer Vision, 2020.
 
 ## Citation
