@@ -23,9 +23,8 @@ def define_options_parser():
     return parser
 
 
-def read_obj_file(sample, args):
-    fullpath = os.path.join(args.data, 'shapes', sample, 'model_normalized.obj')
-    sample_obj = ObjMesh(fullpath)
+def process_obj_file(sample):
+    sample_obj = ObjMesh(sample)
     sample_obj.cleanup()
     data = sample_obj.reformat()
 
@@ -71,8 +70,8 @@ def process(part, cat2label, split, fout, args, n_workers=12, batch_size=1200):
     processing_pool = multiprocessing.Pool(processes=n_workers)
     n_batches = np.ceil(len(samples) / batch_size).astype(np.uint32)
     for b_i in range(n_batches):
-        processing_list = samples[batch_size * b_i:batch_size * (b_i + 1)]
-        processing_results = processing_pool.map(lambda s: read_obj_file(s, args), processing_list)
+        processing_list = list(map(lambda s: os.path.join(args.data, 'shapes', s, 'model_normalized.obj'), samples[batch_size * b_i:batch_size * (b_i + 1)]))
+        processing_results = processing_pool.map(process_obj_file, processing_list)
 
         vcb_ds[batch_size * b_i + 1:batch_size * (b_i + 1) + 1] = \
             np.array(list(map(lambda d: len(d['vertices_c']), processing_results)), dtype=np.uint64).dot(
@@ -134,13 +133,11 @@ def main():
     args = parser.parse_args()
 
     split = pd.read_csv(os.path.join(args.data, 'all.csv'))
-
-    # cats = sorted(os.listdir(os.path.join(args.data, 'shapes')))
     cat2label = {
         '0{}'.format(str(cat)): i for i, cat in enumerate(np.unique(split['synsetId'].values))
     }
 
-    fout = h5.File(os.path.join(args.data, 'ShapeNetCore_tt.h5'), 'w')
+    fout = h5.File(os.path.join(args.save, 'ShapeNetCore_tt.h5'), 'w')
     process('train', cat2label, split, fout, args)
     process('val', cat2label, split, fout, args)
     process('test', cat2label, split, fout, args)
