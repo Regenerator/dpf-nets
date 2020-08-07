@@ -29,7 +29,7 @@ class ObjMesh(object):
                     axis=0
                 )
 
-            if line_segs[0] == 'g':
+            if line_segs[0] == 'g' or line_segs[0] == 'o':
                 i = 0
                 cur_group = '{}_{}'.format(line_segs[-1], i)
                 while cur_group in self.groups:
@@ -41,6 +41,17 @@ class ObjMesh(object):
                 }
 
             if line_segs[0] == 'f':
+                if cur_group is None:
+                    i = 0
+                    cur_group = 'initg_{}'.format(i)
+                    while cur_group in self.groups:
+                        i += 1
+                        cur_group = 'initg_{}'.format(i)
+                    self.groups[cur_group] = {
+                        'faces_v': np.empty((0, 3), dtype=np.int32),
+                        'lines': np.empty((0, 2), dtype=np.int32),
+                    }
+
                 tmp = list(map(lambda l: l.split('/'), line_segs[1:]))
 
                 self.groups[cur_group]['faces_v'] = np.append(
@@ -50,6 +61,17 @@ class ObjMesh(object):
                 )
 
             if line_segs[0] == 'l':
+                if cur_group is None:
+                    i = 0
+                    cur_group = 'initg_{}'.format(i)
+                    while cur_group in self.groups:
+                        i += 1
+                        cur_group = 'initg_{}'.format(i)
+                    self.groups[cur_group] = {
+                        'faces_v': np.empty((0, 3), dtype=np.int32),
+                        'lines': np.empty((0, 2), dtype=np.int32),
+                    }
+
                 self.groups[cur_group]['lines'] = np.append(
                     self.groups[cur_group]['lines'],
                     np.array([line_segs[1:]], dtype=np.int32).reshape(1, -1),

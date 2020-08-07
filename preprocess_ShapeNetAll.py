@@ -1,10 +1,10 @@
 import argparse
 import os
+import shutil
 import multiprocessing
 import gc
 import sys
 import numpy as np
-import pandas as pd
 import h5py as h5
 
 from lib.meshes.objmesh import ObjMesh
@@ -15,7 +15,8 @@ def define_options_parser():
         description='Data processor for ShapeNetCore dataset. '
         'All OBJ files are preprocessed and accumulated in a single .h5 file.'
     )
-    parser.add_argument('data_dir', type=str, help='Path to directory containing the unpacked dataset.')
+    parser.add_argument('snc1_data_dir', type=str, help='Path to directory containing the unpacked ShapeNetCore.v1 dataset.')
+    parser.add_argument('sna_data_dir', type=str, help='Path to directory containing the unpacked ShapeNetAll dataset.')
     parser.add_argument('save_dir', type=str, help='Path to directory for the output.')
     parser.add_argument('n_processes', type=int, help='Number of parallel processing jobs.')
     parser.add_argument('batch_size', type=int, help='Number of shapes in processed batches.')
@@ -33,20 +34,25 @@ def process_obj_file(sample):
     return data
 
 
-def process(part, cat2label, split, fout, args, n_workers=12, batch_size=1200):
+def process(part, cats, cat2label, fout, args, n_workers=12, batch_size=1200):
     # Read filenames and labels #
     samples = []
     labels = []
-    for i in range(len(split[split['split'] == part])):
-        name = '0{}/{}/models/'.format(
-            str(split[split['split'] == part]['synsetId'].values[i]),
-            str(split[split['split'] == part]['modelId'].values[i])
-        )
-        if os.path.exists(os.path.join(args.data_dir, 'shapes', name)):
-            samples.append(name)
-            labels.append(cat2label['0{}'.format(str(split[split['split'] == part]['synsetId'].values[i]))])
-        else:
-            print(name + ' does not exist!')
+    for cat in cats:
+        cat_names = sorted([
+            name for name in os.listdir(os.path.join(args.sna_data_dir, 'ShapeNetMesh', cat))
+            if os.path.isdir(os.path.join(args.sna_data_dir, 'ShapeNetMesh', cat, name))
+        ])
+        cat_size = len(cat_names)
+        if part == 'train':
+            cat_names = cat_names[:int(0.8 * cat_size)]
+        elif part == 'test':
+            cat_names = cat_names[int(0.8 * cat_size):]
+
+        samples += list(map(
+            lambda n: os.path.join(args.sna_data_dir, 'ShapeNetMesh', cat, n), cat_names
+        ))
+        labels += len(cat_names) * [cat2label[cat]]
 
     # Create datasets #
     vcb_ds = fout.create_dataset('{}_vertices_c_bounds'.format(part), shape=(len(samples) + 1,), dtype=np.uint64)
@@ -70,7 +76,7 @@ def process(part, cat2label, split, fout, args, n_workers=12, batch_size=1200):
     n_batches = np.ceil(len(samples) / batch_size).astype(np.uint32)
     for b_i in range(n_batches):
         processing_list = list(map(
-            lambda s: os.path.join(args.data_dir, 'shapes', s, 'model_normalized.obj'),
+            lambda s: os.path.join(s, 'model.obj'),
             samples[batch_size * b_i:batch_size * (b_i + 1)]
         ))
         processing_results = processing_pool.map(process_obj_file, processing_list)
@@ -134,15 +140,26 @@ def main():
     parser = define_options_parser()
     args = parser.parse_args()
 
-    split = pd.read_csv(os.path.join(args.data_dir, 'all.csv'))
-    cat2label = {
-        '0{}'.format(str(cat)): i for i, cat in enumerate(np.unique(split['synsetId'].values))
+    # Copy meshes from ShapeNetCore.v1 corresponding to shapes in ShapeNetAll #
+    cats_all = sorted(os.listdir(os.path.join(args.sna_data_dir, 'ShapeNetVox32')))
+    cats2samples = {
+        cat: sorted(os.listdir(os.path.join(args.sna_data_dir, 'ShapeNetVox32', cat))) for cat in cats_all
     }
 
-    fout = h5.File(os.path.join(args.save_dir, 'ShapeNetCore55v2.h5'), 'w')
-    process('train', cat2label, split, fout, args, n_workers=args.n_processes, batch_size=args.batch_size)
-    process('val', cat2label, split, fout, args, n_workers=args.n_processes, batch_size=args.batch_size)
-    process('test', cat2label, split, fout, args, n_workers=args.n_processes, batch_size=args.batch_size)
+    for cat, samples in cats2samples.items():
+        for sample in samples:
+            samplename = os.path.join(cat, sample)
+            shutil.copytree(os.path.join(args.snc1_data_dir, samplename),
+                            os.path.join(args.sna_data_dir, 'ShapeNetMesh', samplename))
+
+    cats = sorted(os.listdir(os.path.join(args.sna_data_dir, 'ShapeNetMesh')))
+    cat2label = {
+        '{}'.format(str(cat)): i for i, cat in enumerate(cats)
+    }
+
+    fout = h5.File(os.path.join(args.save_dir, 'ShapeNetAll13.h5'), 'w')
+    process('train', cats, cat2label, fout, args, n_workers=args.n_processes, batch_size=args.batch_size)
+    process('test', cats, cat2label, fout, args, n_workers=args.n_processes, batch_size=args.batch_size)
     fout.close()
 
 
