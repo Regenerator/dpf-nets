@@ -1,0 +1,68 @@
+### Dataset configs ###
+path2data: /scratch/gpuhost7/rklokov/ShapeNet_Core/
+path2save: /scratch/gpuhost7/rklokov/ShapeNet_Core/
+meshes_fname: 'ShapeNetCore55v2_meshes_resampled.h5'
+cloud_size: 2048
+
+### Dataset iterator configs ###
+chosen_label: 16
+batch_size: 64
+shuffle: true
+num_workers: 8
+
+### Point cloud transformations ###
+cloud_rescale2orig: False
+cloud_recenter2orig: False
+cloud_translate: False
+cloud_translate_shift:
+  - 0.00055863
+  - 0.00127477
+  - 0.01701898
+cloud_scale: True
+cloud_scale_scale: 2.0
+cloud_noise: False
+cloud_noise_scale: 0.002
+cloud_center: False
+
+### Network configs ###
+# Point cloud encoder configs #
+pc_enc_init_n_channels: 3
+pc_enc_init_n_features: 64
+pc_enc_n_features:
+  - 128
+  - 256
+  - 512
+
+# Global encoder configs #
+deterministic: False
+g_latent_space_size: 128
+g_prior_n_flows: 7
+g_prior_n_features: 128
+g_posterior_n_layers: 1
+
+# Local encoder configs #
+p_latent_space_size: 3
+p_prior_n_layers: 1
+
+# Local decoder configs #
+p_decoder_n_flows: 21
+p_decoder_n_features: 64
+p_decoder_base_type: free # [free, freevar, fixed]
+p_decoder_base_var: -3.5086
+
+### Trainigs configs ###
+train_mode: p_rnvp_mc_g_rnvp_vae
+usage_mode: training
+pnll_weight: 1.0
+gnll_weight: 1.0
+gent_weight: 1.0
+
+n_epochs: 1000
+resume: False
+min_lr: 0.000256
+max_lr: 0.000256
+beta1: 0.9
+min_beta2: 0.95
+max_beta2: 0.95
+cycle_length: 500
+wd: 0.000001

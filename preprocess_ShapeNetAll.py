@@ -4,9 +4,11 @@ import shutil
 import multiprocessing
 import gc
 import sys
+import cv2
 import numpy as np
 import h5py as h5
 
+from itertools import product
 from lib.meshes.objmesh import ObjMesh
 
 
@@ -23,6 +25,11 @@ def define_options_parser():
     return parser
 
 
+def process_png_file(sample):
+    img = np.expand_dims(np.transpose(np.array(cv2.imread(sample), dtype=np.uint8), (2, 0, 1)), 0)
+    return img
+
+
 def process_obj_file(sample):
     sample_obj = ObjMesh(sample)
     sample_obj.cleanup()
@@ -34,7 +41,51 @@ def process_obj_file(sample):
     return data
 
 
-def process(part, cats, cat2label, fout, args, n_workers=12, batch_size=1200):
+def process_images(part, cats, cat2label, fout, args, n_workers=12, batch_size=100):
+    # Read filenames #
+    samples = []
+    labels = []
+    for cat in cats:
+        cat_names = sorted([
+            name for name in os.listdir(os.path.join(args.sna_data_dir, 'ShapeNetMesh', cat))
+            if os.path.isdir(os.path.join(args.sna_data_dir, 'ShapeNetMesh', cat, name))
+        ])
+        cat_size = len(cat_names)
+        if part == 'train':
+            cat_names = cat_names[:int(0.8 * cat_size)]
+        elif part == 'test':
+            cat_names = cat_names[int(0.8 * cat_size):]
+
+        samples += list(map(
+            lambda n: os.path.join(args.sna_data_dir, 'ShapeNetRendering', cat, n), cat_names
+        ))
+        labels += len(cat_names) * [cat2label[cat]]
+
+    # Create datasets #
+    images_ds = fout.create_dataset('{}_images'.format(part), shape=(24 * len(samples), 4, 137, 137), dtype=np.uint8)
+    labels_ds = fout.create_dataset('{}_labels'.format(part), data=np.array(labels, dtype=np.uint8))
+
+    # Read in batches #
+    processing_pool = multiprocessing.Pool(processes=n_workers)
+    n_batches = np.ceil(len(samples) / batch_size).astype(np.uint32)
+    for b_i in range(n_batches):
+        processing_list = list(map(
+            lambda s: os.path.join(s[0], 'rendering', '{:02d}.png'.format(s[1])),
+            product(samples[batch_size * b_i:batch_size * (b_i + 1)], np.arange(24))
+        ))
+        processing_results = processing_pool.map(process_png_file, processing_list)
+
+        images_ds[24 * batch_size * b_i:24 * batch_size * (b_i + 1)] = np.concatenate(processing_results, 0)
+
+        del processing_results
+        gc.collect()
+
+        sys.stdout.write('Packing {} images: [{}/{}]\n'.format(part, b_i + 1, n_batches))
+        sys.stdout.flush()
+    processing_pool.close()
+
+
+def process_meshes(part, cats, cat2label, fout, args, n_workers=12, batch_size=1200):
     # Read filenames and labels #
     samples = []
     labels = []
@@ -113,7 +164,7 @@ def process(part, cats, cat2label, fout, args, n_workers=12, batch_size=1200):
         del processing_results
         gc.collect()
 
-        sys.stdout.write('Progress: [{}/{}]\n'.format(b_i + 1, n_batches))
+        sys.stdout.write('Packing {} meshes: [{}/{}]\n'.format(part, b_i + 1, n_batches))
         sys.stdout.flush()
     processing_pool.close()
 
@@ -157,10 +208,15 @@ def main():
         '{}'.format(str(cat)): i for i, cat in enumerate(cats)
     }
 
-    fout = h5.File(os.path.join(args.save_dir, 'ShapeNetAll13.h5'), 'w')
-    process('train', cats, cat2label, fout, args, n_workers=args.n_processes, batch_size=args.batch_size)
-    process('test', cats, cat2label, fout, args, n_workers=args.n_processes, batch_size=args.batch_size)
-    fout.close()
+    fout_images = h5.File(os.path.join(args.save_dir, 'ShapeNetAll13_images.h5'), 'w')
+    process_images('train', cats, cat2label, fout_images, args, n_workers=args.n_processes, batch_size=args.batch_size)
+    process_images('test', cats, cat2label, fout_images, args, n_workers=args.n_processes, batch_size=args.batch_size)
+    fout_images.close()
+
+    fout_meshes = h5.File(os.path.join(args.save_dir, 'ShapeNetAll13_meshes.h5'), 'w')
+    process_meshes('train', cats, cat2label, fout_meshes, args, n_workers=args.n_processes, batch_size=args.batch_size)
+    process_meshes('test', cats, cat2label, fout_meshes, args, n_workers=args.n_processes, batch_size=args.batch_size)
+    fout_meshes.close()
 
 
 if __name__ == '__main__':

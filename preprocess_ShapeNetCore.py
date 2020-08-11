@@ -107,7 +107,7 @@ def process(part, cat2label, split, fout, args, n_workers=12, batch_size=1200):
         del processing_results
         gc.collect()
 
-        sys.stdout.write('Progress: [{}/{}]\n'.format(b_i + 1, n_batches))
+        sys.stdout.write('Packing {} meshes: [{}/{}]\n'.format(part, b_i + 1, n_batches))
         sys.stdout.flush()
     processing_pool.close()
 
@@ -139,7 +139,7 @@ def main():
         '0{}'.format(str(cat)): i for i, cat in enumerate(np.unique(split['synsetId'].values))
     }
 
-    fout = h5.File(os.path.join(args.save_dir, 'ShapeNetCore55v2.h5'), 'w')
+    fout = h5.File(os.path.join(args.save_dir, 'ShapeNetCore55v2_meshes.h5'), 'w')
     process('train', cat2label, split, fout, args, n_workers=args.n_processes, batch_size=args.batch_size)
     process('val', cat2label, split, fout, args, n_workers=args.n_processes, batch_size=args.batch_size)
     process('test', cat2label, split, fout, args, n_workers=args.n_processes, batch_size=args.batch_size)

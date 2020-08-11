@@ -1,0 +1,106 @@
+### Dataset configs ###
+path2data: /scratch/gpuhost7/rklokov/ShapeNet_All/
+path2save: /scratch/gpuhost7/rklokov/ShapeNet_All/
+images_fname: 'ShapeNetAll13_images.h5'
+meshes_fname: 'ShapeNetAll13_meshes.h5'
+cloud_size: 2500
+
+### Dataset iterator configs ###
+chosen_label: 
+batch_size: 50
+shuffle: true
+num_workers: 8
+
+### Image transformations ###
+image_resize: True
+image_size:
+  - 224
+  - 224
+image_pad: False
+image_pad_size:
+  - 0
+  - 0
+image_add_grayscale: True
+image_normalize: True
+image_means:
+  - 0.03492457
+  - 0.03379815
+  - 0.03475684
+  - 0.03874264
+  - 0.14249628
+image_stds:
+  - 0.10963749
+  - 0.10795733
+  - 0.11031612
+  - 0.12266339
+  - 0.34554828
+image_noise: False
+image_noise_scale: 0.02
+image_remove_alpha: True
+
+### Point cloud transformations ###
+cloud_rescale2orig: False
+cloud_recenter2orig: False
+cloud_translate: False
+cloud_translate_shift:
+  - -0.01728925
+  - 0.01043933
+  - -0.00012057
+cloud_scale: True
+cloud_scale_scale: 2.0
+cloud_noise: False
+cloud_noise_scale: 0.002
+cloud_center: False
+
+### Network configs ###
+# Image encoder configs #
+img_enc_init_n_channels: 4
+img_enc_init_n_features: 32
+img_enc_n_features:
+  - 64
+  - 128
+  - 256
+img_enc_bottleneck_n_features: 256
+
+# Point cloud encoder configs #
+pc_enc_init_n_channels: 3
+pc_enc_init_n_features: 64
+pc_enc_n_features:
+  - 128
+  - 256
+  - 512
+
+# Global encoder configs #
+deterministic: False
+g_latent_space_size: 512
+g_prior_n_layers: 1
+g_prior_n_flows: 7
+g_prior_n_features: 128
+g_posterior_n_layers: 1
+
+# Local encoder configs #
+p_latent_space_size: 3
+p_prior_n_layers: 1
+
+# Local decoder configs #
+p_decoder_n_flows: 21
+p_decoder_n_features: 64
+p_decoder_base_type: freevar # [free, freevar, fixed]
+p_decoder_base_var: 0.
+
+### Trainigs configs ###
+train_mode: p_rnvp_mc_g_rnvp_vae_ic
+usage_mode: training
+pnll_weight: 1.0
+gnll_weight: 1.0
+gent_weight: 1.0
+
+n_epochs: 20
+resume: False
+min_lr: 0.000256
+max_lr: 0.000256
+beta1: 0.9
+min_beta2: 0.995
+max_beta2: 0.995
+cycle_length: 20
+wd: 0.000001
