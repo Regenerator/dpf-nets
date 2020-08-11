@@ -59,6 +59,7 @@ gent_weight: 1.0
 
 n_epochs: 800
 resume: False
+resume_optimizer: False
 min_lr: 0.000256
 max_lr: 0.000256
 beta1: 0.9

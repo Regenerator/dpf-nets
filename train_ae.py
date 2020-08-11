@@ -17,8 +17,14 @@ from lib.networks.training import train
 
 def define_options_parser():
     parser = argparse.ArgumentParser(description='Model training script. Provide a suitable config.')
-    parser.add_argument('config', help='Path to config file in YAML format.')
-    parser.add_argument('modelname', help='Model name to save checkpoints.')
+    parser.add_argument('config', type=str, help='Path to config file in YAML format.')
+    parser.add_argument('modelname', type=str, help='Model name to save checkpoints.')
+    parser.add_argument('n_epochs', type=int, help='Total number of training epochs.')
+    parser.add_argument('lr', type=float, help='Learining rate value.')
+    parser.add_argument('--resume', action='store_true',
+                        help='Flag signaling if training is resumed from a checkpoint.')
+    parser.add_argument('--resume_optimizer', action='store_true',
+                        help='Flag signaling if optimizer parameters are resumed from a checkpoint.')
     return parser
 
 
@@ -36,6 +42,11 @@ args = parser.parse_args()
 with io.open(args.config, 'r') as stream:
     config = yaml.load(stream)
 config['model_name'] = '{0}.pkl'.format(args.modelname)
+config['min_lr'] = config['max_lr'] = args.lr
+if args.resume:
+    config['resume'] = True
+if args.resume_optimizer:
+    config['resume_optimizer'] = True
 print('Configurations loaded.')
 
 cloud_transform = ComposeCloudTransformation(**config)
@@ -70,7 +81,8 @@ else:
     cur_epoch = checkpoint['epoch']
     cur_iter = checkpoint['iter']
     model.load_state_dict(checkpoint['model_state'])
-    optimizer.load_state_dict(checkpoint['optimizer_state'])
+    if config['resume_optimizer']:
+        optimizer.load_state_dict(checkpoint['optimizer_state'])
     del(checkpoint)
     print('Model {} loaded.'.format(path2checkpoint))
 

@@ -209,8 +209,8 @@ def main():
     }
 
     fout_images = h5.File(os.path.join(args.save_dir, 'ShapeNetAll13_images.h5'), 'w')
-    process_images('train', cats, cat2label, fout_images, args, n_workers=args.n_processes, batch_size=args.batch_size)
-    process_images('test', cats, cat2label, fout_images, args, n_workers=args.n_processes, batch_size=args.batch_size)
+    process_images('train', cats, cat2label, fout_images, args, n_workers=args.n_processes, batch_size=args.batch_size // 24)
+    process_images('test', cats, cat2label, fout_images, args, n_workers=args.n_processes, batch_size=args.batch_size // 24)
     fout_images.close()
 
     fout_meshes = h5.File(os.path.join(args.save_dir, 'ShapeNetAll13_meshes.h5'), 'w')
