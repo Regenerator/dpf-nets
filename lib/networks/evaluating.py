@@ -2,7 +2,6 @@ import os
 from time import time
 from sys import stdout
 from scipy.stats import entropy
-from skimage import morphology
 
 import h5py as h5
 import numpy as np
@@ -20,48 +19,6 @@ def f_score(predicted_clouds, true_clouds, threshold=0.001):
     precision = 100. * (rd < threshold).float().mean(1)
     recall = 100. * (ld < threshold).float().mean(1)
     return 2. * precision * recall / (precision + recall + 1e-7)
-
-
-def get_voxel_occupances(clouds, res=32, bound=0.5):
-    step = 1. / res
-    v_bs = -0.5 + np.arange(res + 1) * step
-
-    surface_grids = np.zeros((clouds.shape[0], res, res, res), dtype=np.uint8)
-
-    preiis = np.expand_dims(clouds[:, :, 0], 0)
-    preiis = np.logical_and(v_bs[:res].reshape(-1, 1, 1) <= preiis, preiis < v_bs[1:].reshape(-1, 1, 1))
-    iis = preiis.argmax(0).flatten()
-    iis_is_inside = preiis.sum(0) > 0
-
-    prejjs = np.expand_dims(clouds[:, :, 1], 0)
-    prejjs = np.logical_and(v_bs[:res].reshape(-1, 1, 1) <= prejjs, prejjs < v_bs[1:].reshape(-1, 1, 1))
-    jjs = prejjs.argmax(0).flatten()
-    jjs_is_inside = prejjs.sum(0) > 0
-
-    prekks = np.expand_dims(clouds[:, :, 2], 0)
-    prekks = np.logical_and(v_bs[:res].reshape(-1, 1, 1) <= prekks, prekks < v_bs[1:].reshape(-1, 1, 1))
-    kks = prekks.argmax(0).flatten()
-    kks_is_inside = prekks.sum(0) > 0
-
-    pc_inds = np.tile(np.arange(clouds.shape[0]).reshape(-1, 1), (1, clouds.shape[1])).flatten()
-    pc_is_inside = np.logical_and(np.logical_and(iis_is_inside, jjs_is_inside), kks_is_inside).flatten()
-
-    pc_inds = pc_inds[pc_is_inside]
-    iis = iis[pc_is_inside]
-    jjs = jjs[pc_is_inside]
-    kks = kks[pc_is_inside]
-
-    np.add.at(surface_grids, (pc_inds, iis, jjs, kks), 1)
-
-    filled_grids = np.zeros((clouds.shape[0], res, res, res), dtype=np.uint8)
-    for j in range(clouds.shape[0]):
-        tmp_grid = np.zeros((res + 2, res + 2, res + 2), dtype=np.uint8)
-        tmp_grid[1:-1, 1:-1, 1:-1] = surface_grids[j]
-        labels, num_labels = morphology.label(tmp_grid, background=1, connectivity=1, return_num=True)
-        outside_label = np.array([labels[0, 0, 0]])
-        filled_grids[j][(labels != outside_label.reshape(1, 1, 1))[1:-1, 1:-1, 1:-1]] = 1
-
-    return filled_grids
 
 
 def get_voxel_occ_dist(all_clouds, clouds_flag='gen', res=28, bound=0.5, bs=128, warning=True):

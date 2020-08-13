@@ -192,9 +192,9 @@ def main():
     args = parser.parse_args()
 
     # Copy meshes from ShapeNetCore.v1 corresponding to shapes in ShapeNetAll #
-    cats_all = sorted(os.listdir(os.path.join(args.sna_data_dir, 'ShapeNetVox32')))
+    cats_all = sorted(os.listdir(os.path.join(args.sna_data_dir, 'ShapeNetRendering')))
     cats2samples = {
-        cat: sorted(os.listdir(os.path.join(args.sna_data_dir, 'ShapeNetVox32', cat))) for cat in cats_all
+        cat: sorted(os.listdir(os.path.join(args.sna_data_dir, 'ShapeNetRendering', cat))) for cat in cats_all
     }
 
     for cat, samples in cats2samples.items():

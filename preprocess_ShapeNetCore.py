@@ -43,10 +43,13 @@ def process(part, cat2label, split, fout, args, n_workers=12, batch_size=1200):
             str(split[split['split'] == part]['modelId'].values[i])
         )
         if os.path.exists(os.path.join(args.data_dir, 'shapes', name)):
-            samples.append(name)
-            labels.append(cat2label['0{}'.format(str(split[split['split'] == part]['synsetId'].values[i]))])
+            if os.path.exists(os.path.join(args.data_dir, 'shapes', name, 'model_normalized.obj')):
+                samples.append(name)
+                labels.append(cat2label['0{}'.format(str(split[split['split'] == part]['synsetId'].values[i]))])
+            else:
+                print(os.path.join(name, 'model_normalized.obj') + ' does not exist, skipping this shape.')
         else:
-            print(name + ' does not exist!')
+            print(name + ' does not exist, skipping this shape.')
 
     # Create datasets #
     vcb_ds = fout.create_dataset('{}_vertices_c_bounds'.format(part), shape=(len(samples) + 1,), dtype=np.uint64)
