@@ -39,7 +39,7 @@ Here `data_dir` should be the path to directory with unpacked [ShapeNetCore55.v2
     - ...
   - all.csv
 ```
-`save_dir` is the path to directory where repacked data is saved.
+`save_dir` is the path to directory where repacked data is saved. There are mistakes in the official split file and the dataset such as missing shape directories and `.obj` files. Corresponding shapes are skipped during preprocessing and are not included in the repacked version of the dataset.
 
 For reasons discussed in the paper we also randomly resplit the data into train/val/test sets with a separate script:
 ```
