@@ -45,7 +45,7 @@ For reasons discussed in the paper we also randomly resplit the data into train/
 ```
 python resample_ShapeNetCore.py data_path
 ```
-where `data_path` is the path to .h5 output file of the previous script.
+where `data_path` is the path to `.h5` output file of the previous script. It creates a separate `*_resampled.h5` file in the same directory.
 
 ### ShapeNetAll13
 The images for this data are found [here](http://3d-r2n2.stanford.edu/). Instead of using voxel grids for these images we use original meshes from [ShapeNetCore55.v1](https://www.shapenet.org/download/shapenetcore). The data for SVR is prepared with:
