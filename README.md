@@ -39,13 +39,13 @@ Here `data_dir` should be the path to directory with unpacked [ShapeNetCore55.v2
     - ...
   - all.csv
 ```
-`save_dir` is the path to directory where repacked data is saved.
+`save_dir` is the path to directory where repacked data is saved. There are mistakes in the official split file and the dataset such as missing shape directories and `.obj` files. Corresponding shapes are skipped during preprocessing and are not included in the repacked version of the dataset.
 
 For reasons discussed in the paper we also randomly resplit the data into train/val/test sets with a separate script:
 ```
 python resample_ShapeNetCore.py data_path
 ```
-where `data_path` is the path to .h5 output file of the previous script.
+where `data_path` is the path to `.h5` output file of the previous script. It creates a separate `*_resampled.h5` file in the same directory.
 
 ### ShapeNetAll13
 The images for this data are found [here](http://3d-r2n2.stanford.edu/). Instead of using voxel grids for these images we use original meshes from [ShapeNetCore55.v1](https://www.shapenet.org/download/shapenetcore). The data for SVR is prepared with:
