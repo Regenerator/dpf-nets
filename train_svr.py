@@ -43,6 +43,7 @@ args = parser.parse_args()
 with io.open(args.config, 'r') as stream:
     config = yaml.load(stream)
 config['model_name'] = '{0}.pkl'.format(args.modelname)
+config['n_epochs'] = args.n_epochs
 config['min_lr'] = config['max_lr'] = args.lr
 if args.resume:
     config['resume'] = True
