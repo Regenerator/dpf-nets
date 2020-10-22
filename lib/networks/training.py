@@ -4,31 +4,7 @@ from sys import stdout
 
 import torch
 
-
-class AverageMeter(object):
-    def __init__(self):
-        self.reset()
-
-    def reset(self):
-        self.val = 0
-        self.avg = 0
-        self.sum = 0
-        self.count = 0
-
-    def update(self, val, n=1):
-        self.val = val
-        self.sum += val * n
-        self.count += n
-        self.avg = self.sum / self.count
-
-
-def save_model(state, model_name):
-    torch.save(state, model_name)
-    print('Model saved to ' + model_name)
-
-
-def cnt_params(params):
-    return sum(p.numel() for p in params if p.requires_grad)
+from lib.networks.utils import AverageMeter, save_model
 
 
 def train(iterator, model, loss_func, optimizer, scheduler, epoch, iter, **kwargs):
@@ -54,18 +30,16 @@ def train(iterator, model, loss_func, optimizer, scheduler, epoch, iter, **kwarg
         data_time.update(time() - end)
         scheduler(optimizer, epoch, iter + i)
 
-        if train_mode == 'p_rnvp_mc_g_rnvp_vae':
-            g_clouds = batch['cloud'].cuda(non_blocking=True)
-            p_clouds = batch['eval_cloud'].cuda(non_blocking=True)
-            outputs = model(g_clouds, p_clouds)
-            loss, pnll, gnll, gent = loss_func(g_clouds, p_clouds, outputs)
+        g_clouds = batch['cloud'].cuda(non_blocking=True)
+        p_clouds = batch['eval_cloud'].cuda(non_blocking=True)
 
+        if train_mode == 'p_rnvp_mc_g_rnvp_vae':
+            outputs = model(g_clouds, p_clouds)
         elif train_mode == 'p_rnvp_mc_g_rnvp_vae_ic':
-            g_clouds = batch['cloud'].cuda(non_blocking=True)
-            p_clouds = batch['eval_cloud'].cuda(non_blocking=True)
             images = batch['image'].cuda(non_blocking=True)
             outputs = model(g_clouds, p_clouds, images)
-            loss, pnll, gnll, gent = loss_func(g_clouds, p_clouds, outputs)
+
+        loss, pnll, gnll, gent = loss_func(g_clouds, p_clouds, outputs)
 
         with torch.no_grad():
             if torch.isnan(loss):

@@ -14,6 +14,7 @@ from lib.networks.models import Local_Cond_RNVP_MC_Global_RNVP_VAE_IC
 from lib.networks.losses import Local_Cond_RNVP_MC_Global_RNVP_VAE_Loss
 from lib.networks.optimizers import Adam, LRUpdater
 from lib.networks.training import train
+from lib.networks.utils import count_parameters
 
 
 def define_options_parser():
@@ -27,15 +28,6 @@ def define_options_parser():
     parser.add_argument('--resume_optimizer', action='store_true',
                         help='Flag signaling if optimizer parameters are resumed from a checkpoint.')
     return parser
-
-
-def save_model(state, model_name):
-    torch.save(state, model_name, pickle_protocol=4)
-    print('Model saved to ' + model_name)
-
-
-def count_parameters(model):
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 
 parser = define_options_parser()

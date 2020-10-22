@@ -14,7 +14,7 @@ class Local_Cond_RNVP_MC_Global_RNVP_VAE(nn.Module):
     def __init__(self, **kwargs):
         super(Local_Cond_RNVP_MC_Global_RNVP_VAE, self).__init__()
 
-        self.mode = kwargs.get('usage_mode')
+        self.mode = kwargs.get('util_mode')
         self.deterministic = kwargs.get('deterministic')
 
         self.pc_enc_init_n_channels = kwargs.get('pc_enc_init_n_channels')
@@ -262,7 +262,7 @@ class Local_Cond_RNVP_MC_Global_RNVP_VAE_IC(nn.Module):
     def __init__(self, **kwargs):
         super(Local_Cond_RNVP_MC_Global_RNVP_VAE_IC, self).__init__()
 
-        self.mode = kwargs.get('usage_mode')
+        self.mode = kwargs.get('util_mode')
         self.deterministic = kwargs.get('deterministic')
 
         self.pc_enc_init_n_channels = kwargs.get('pc_enc_init_n_channels')

@@ -13,6 +13,7 @@ from lib.networks.models import Local_Cond_RNVP_MC_Global_RNVP_VAE
 from lib.networks.losses import Local_Cond_RNVP_MC_Global_RNVP_VAE_Loss
 from lib.networks.optimizers import Adam, LRUpdater
 from lib.networks.training import train
+from lib.networks.utils import count_parameters
 
 
 def define_options_parser():
@@ -28,15 +29,6 @@ def define_options_parser():
     return parser
 
 
-def save_model(state, model_name):
-    torch.save(state, model_name, pickle_protocol=4)
-    print('Model saved to ' + model_name)
-
-
-def count_parameters(model):
-    return sum(p.numel() for p in model.parameters() if p.requires_grad)
-
-
 parser = define_options_parser()
 args = parser.parse_args()
 with io.open(args.config, 'r') as stream:
@@ -44,10 +36,8 @@ with io.open(args.config, 'r') as stream:
 config['model_name'] = '{0}.pkl'.format(args.modelname)
 config['n_epochs'] = args.n_epochs
 config['min_lr'] = config['max_lr'] = args.lr
-if args.resume:
-    config['resume'] = True
-if args.resume_optimizer:
-    config['resume_optimizer'] = True
+config['resume'] = True if args.resume else False
+config['resume_optimizer'] = True if args.resume_optimizer else False
 print('Configurations loaded.')
 
 cloud_transform = ComposeCloudTransformation(**config)
@@ -68,6 +58,8 @@ print('Model init: done.')
 print('Total number of parameters: {}'.format(count_parameters(model)))
 
 criterion = Local_Cond_RNVP_MC_Global_RNVP_VAE_Loss(**config).cuda()
+print('Loss init: done.')
+
 optimizer = Adam(model.parameters(), lr=config['max_lr'], weight_decay=config['wd'],
                  betas=(config['beta1'], config['max_beta2']), amsgrad=True)
 scheduler = LRUpdater(len(train_iterator), **config)

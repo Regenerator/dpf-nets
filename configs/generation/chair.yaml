@@ -52,7 +52,7 @@ p_decoder_base_var: -3.6990
 
 ### Trainigs configs ###
 train_mode: p_rnvp_mc_g_rnvp_vae
-usage_mode: training
+util_mode: training
 pnll_weight: 1.0
 gnll_weight: 1.0
 gent_weight: 1.0
