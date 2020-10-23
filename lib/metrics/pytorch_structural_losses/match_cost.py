@@ -1,6 +1,6 @@
 import torch
 from torch.autograd import Function
-from metrics.StructuralLosses.StructuralLossesBackend import ApproxMatch, MatchCost, MatchCostGrad
+from lib.metrics.StructuralLosses.StructuralLossesBackend import ApproxMatch, MatchCost, MatchCostGrad
 
 # Inherit from Function
 class MatchCostFunction(Function):

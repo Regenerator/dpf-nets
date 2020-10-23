@@ -14,7 +14,7 @@ from lib.networks.models import Local_Cond_RNVP_MC_Global_RNVP_VAE_IC
 from lib.networks.losses import Local_Cond_RNVP_MC_Global_RNVP_VAE_Loss
 from lib.networks.optimizers import Adam, LRUpdater
 from lib.networks.training import train
-from lib.networks.utils import count_parameters
+from lib.networks.utils import cnt_params
 
 
 def define_options_parser():
@@ -59,7 +59,7 @@ print('Iterator init: done.')
 
 model = Local_Cond_RNVP_MC_Global_RNVP_VAE_IC(**config).cuda()
 print('Model init: done.')
-print('Total number of parameters: {}'.format(count_parameters(model)))
+print('Total number of parameters: {}'.format(cnt_params(model.parameters())))
 
 criterion = Local_Cond_RNVP_MC_Global_RNVP_VAE_Loss(**config).cuda()
 optimizer = Adam(model.parameters(), lr=config['max_lr'], weight_decay=config['wd'],

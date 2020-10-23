@@ -7,7 +7,7 @@ import numpy as np
 import torch
 
 from lib.networks.utils import AverageMeter
-from lib_networks.utils import distChamferCUDA, f_score
+from lib.networks.utils import distChamferCUDA, f_score
 
 
 def evaluate(iterator, model, loss_func, **kwargs):
