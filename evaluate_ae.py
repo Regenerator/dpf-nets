@@ -11,7 +11,6 @@ from lib.datasets.cloud_transformations import ComposeCloudTransformation
 
 from lib.networks.models import Local_Cond_RNVP_MC_Global_RNVP_VAE
 from lib.networks.losses import Local_Cond_RNVP_MC_Global_RNVP_VAE_Loss
-from lib.networks.optimizers import Adam, LRUpdater
 from lib.networks.evaluating import evaluate
 
 
